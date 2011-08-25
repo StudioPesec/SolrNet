@@ -137,6 +137,14 @@ let nuGetSingle dir =
     !!(dir @@ "bin" @@ config @@ (dir + ".*")) |> Copy nugetLib
     nuGetBuild 
 
+Target "NuGet.SchemaDSL" (fun _ ->
+    nuGetSingle 
+        "SolrNet.SchemaDSL" 
+        "SolrNet.SchemaDSL"
+        "Solr SchemaDSL"
+        ["SolrNet", version]
+)
+
 Target "NuGet.Windsor" (fun _ ->
     nuGetSingle 
         "Castle.Facilities.SolrNetIntegration" 

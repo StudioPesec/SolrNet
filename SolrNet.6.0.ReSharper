@@ -102,6 +102,7 @@
       <Abbreviation Text="NH" />
       <Abbreviation Text="MS" />
       <Abbreviation Text="JQ" />
+      <Abbreviation Text="DSL" />
     </Naming2>
   </CodeStyleSettings>
 </Configuration>
