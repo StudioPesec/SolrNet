@@ -59,6 +59,10 @@ namespace SolrNet.SchemaDSL.Impl {
             return new DSLFilterBy<T, TField>(this, fieldExpression.GetSolrFieldName());
         }
 
+        public IDSLFilterBy<T, TField> FilterBy<TField>(string fieldName) {
+            return new DSLFilterBy<T, TField>(this, fieldName);
+        }
+
         public IDSLQuery<T> Query(string searchString) {
             return new DSLQuery<T>(this, searchString);
         }

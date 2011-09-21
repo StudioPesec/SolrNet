@@ -50,6 +50,14 @@ namespace SolrNet.SchemaDSL.Impl
         /// <param name="fieldExpression"></param>
         /// <returns></returns>
         IDSLFilterBy<TSchema, TField> FilterBy<TField>(Expression<Func<TSchema, TField>> fieldExpression);
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TField"></typeparam>
+        /// <param name="fieldName"></param>
+        /// <returns></returns>
+        IDSLFilterBy<TSchema, TField> FilterBy<TField>(string fieldName);
 
         /// <summary>
         /// 
