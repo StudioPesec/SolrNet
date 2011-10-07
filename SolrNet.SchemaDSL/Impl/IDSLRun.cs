@@ -31,6 +31,7 @@ namespace SolrNet.SchemaDSL.Impl
         IDSLRun<T> OrderBy<TField>(Expression<Func<T, TField>> fieldExpression);
         IDSLRun<T> OrderBy<TField>(Expression<Func<T, TField>> fieldExpression, Order o);
         IDSLFacetFieldOptions<T> WithFacetField<TField>(Expression<Func<T, TField>> fieldExpression);
+        IDSLFacetFieldOptions<T> WithFacetField<TField>(string fieldName);
         IDSLRun<T> WithFacetQuery(string query);
         IDSLRun<T> WithFacetQuery(ISolrQuery query);
         IDSLRun<T> WithHighlighting(HighlightingParameters parameters);

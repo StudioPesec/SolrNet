@@ -196,6 +196,12 @@ namespace SolrNet.SchemaDSL.Impl
             return new DSLFacetFieldOptions<T>(this, newFacets, facetFieldQuery);
         }
 
+        public IDSLFacetFieldOptions<T> WithFacetField<TField>(string fieldName) {
+            var facetFieldQuery = new SolrFacetFieldQuery(fieldName);
+            var newFacets = new List<ISolrFacetQuery> { facetFieldQuery };
+            return new DSLFacetFieldOptions<T>(this, newFacets, facetFieldQuery);
+        }
+
         public IDSLRun<T> WithFacetQuery(string q)
         {
             return WithFacetQuery(new SolrQuery(q));
