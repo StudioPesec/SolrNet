@@ -37,6 +37,6 @@ namespace SolrNet.SchemaDSL.Impl
         IDSLRun<T> WithHighlighting(HighlightingParameters parameters);
         IDSLRun<T> WithHighlightingFields<TField>(params Expression<Func<T, TField>>[] fieldExpression);
         IDSLRun<T> DefType(string defType);
-
+        IDSLRun<T> WithQueryType(string queryType);
     }
 }

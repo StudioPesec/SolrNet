@@ -133,7 +133,7 @@ namespace SolrNet.SchemaDSL.Impl
         }
 
 
-        public ISolrQueryResults<T> RunInternal(int? start, int? rows, string handler)
+        internal ISolrQueryResults<T> RunInternal(int? start, int? rows, string handler)
         {
             var extraParams = new Dictionary<string, string>(this.ExtraParams);
 
@@ -229,6 +229,11 @@ namespace SolrNet.SchemaDSL.Impl
 
         public IDSLRun<T> DefType(string defType) {
             var dslRun = new DSLRun<T>(this, new Dictionary<string, string> {{"defType", defType}});
+            return dslRun;
+        }
+
+        public IDSLRun<T> WithQueryType(string queryType) {
+            var dslRun = new DSLRun<T>(this, new Dictionary<string, string> { { "qt", queryType } });
             return dslRun;
         }
 
