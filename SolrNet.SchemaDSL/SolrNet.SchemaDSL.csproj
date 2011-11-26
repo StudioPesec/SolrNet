@@ -39,6 +39,8 @@
     <Compile Include="Impl\DeleteBy.cs" />
     <Compile Include="Impl\IDeleteBy.cs" />
     <Compile Include="Impl\IInterval.cs" />
+    <Compile Include="Impl\ISpellCheckOptions.cs" />
+    <Compile Include="Impl\SpellCheckOptions.cs" />
     <Compile Include="ISchema.cs" />
     <Compile Include="Solr.cs" />
     <Compile Include="Impl\DSLFacetFieldOptions.cs" />

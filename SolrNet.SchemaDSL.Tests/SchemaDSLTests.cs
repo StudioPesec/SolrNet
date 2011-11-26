@@ -462,5 +462,60 @@ namespace SolrNet.SchemaDSL.Tests {
                 );
 
         }
+
+        [Test]
+        public void ExtraParam() {
+            mocks.BackToRecordAll();
+            var solrGetParameters = new KeyValuePairList {
+                {"q", "*:*"},
+                {"abc", "123"},
+                {"rows", 10.ToString()},
+                {"start", 0.ToString()},
+            };
+            With.Mocks(mocks)
+                .Expecting(() => Expect
+                                     .Call(conn.Get("/select", solrGetParameters)).IgnoreArguments()
+                                     .Callback(new SolrGetTester("/select", solrGetParameters).ValidateSolrGet)
+                                     .Return(EmptySolrResponse))
+
+                .Verify(() => Solr
+                                  .Query()
+                                  .AddExtraParams(new Dictionary<string, string> {
+                                      {"abc", "123"},
+                                  })
+                                  .Run(0, 10)
+                );
+        }
+
+        [Test]
+        public void SpellCheck()
+        {
+            mocks.BackToRecordAll();
+            var solrGetParameters = new KeyValuePairList {
+                {"q", "*:*"},
+                {"fq", "(MakeDesc:bmw)"},
+                {"spellcheck", "true"},
+                {"spellcheck.q", "bmw"},
+                {"spellcheck.count", "10"},
+                {"spellcheck.onlyMorePopular", "true"},
+                {"rows", 10.ToString()},
+                {"start", 0.ToString()},
+            };
+            With.Mocks(mocks)
+                .Expecting(() => Expect
+                                     .Call(conn.Get("/select", solrGetParameters)).IgnoreArguments()
+                                     .Callback(new SolrGetTester("/select", solrGetParameters).ValidateSolrGet)
+                                     .Return(EmptySolrResponse))
+
+                .Verify(() => Solr
+                                  .Query()
+                                  .By(f => f.MakeDesc).Is("bmw")
+                                  .WithSpellCheck("bmw")
+                                  .SetCount(10)
+                                  .SetOnlyMorePopular(true)
+                                  .Run(0, 10)
+                );
+
+        }
     }
 }

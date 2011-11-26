@@ -25,16 +25,15 @@ using SolrNet.Impl;
 using SolrNet.SchemaDSL.Utils;
 #pragma warning disable 1591
 
-namespace SolrNet.SchemaDSL.Impl
-{
-    class DSLRun<T> : IDSLRun<T> where T : ISchema
-    {
+namespace SolrNet.SchemaDSL.Impl {
+    internal class DSLRun<T> : IDSLRun<T> where T : ISchema {
         internal readonly ISolrFieldSerializer SolrFieldSerializer;
         private readonly ISolrQueryExecuter<T> solrQueryExecuter;
 
         protected readonly IDictionary<Guid, ISolrQuery> Filters = new Dictionary<Guid, ISolrQuery>();
         protected readonly ICollection<SortOrder> Order = new List<SortOrder>();
         protected readonly ICollection<ISolrFacetQuery> Facets = new List<ISolrFacetQuery>();
+        protected readonly SpellCheckingParameters SpellCheckingParameters;
         protected readonly HighlightingParameters Highlight;
         protected readonly ISolrQuery QueryField;
         //protected readonly string DefTypeField;
@@ -48,17 +47,17 @@ namespace SolrNet.SchemaDSL.Impl
             this.solrQueryExecuter = solrQueryExecuter;
         }
 
-        internal DSLRun(DSLRun<T> parentDslRun)
-        {
+        internal DSLRun(DSLRun<T> parentDslRun) {
             //Guard.ArgumentNotNull(parentDslRun, "parentDslRun");
 
             this.Filters = parentDslRun.Filters;
             this.Order = parentDslRun.Order;
             this.Facets = parentDslRun.Facets;
+            this.SpellCheckingParameters = parentDslRun.SpellCheckingParameters;
             this.Highlight = parentDslRun.Highlight;
             this.QueryField = parentDslRun.QueryField;
             //this.DefTypeField = parentDslRun.DefTypeField;
-            this.ExtraParams = parentDslRun.ExtraParams;
+            this.ExtraParams = new Dictionary<string, string>(parentDslRun.ExtraParams);
             this.solrQueryExecuter = parentDslRun.solrQueryExecuter;
             this.SolrFieldSerializer = parentDslRun.SolrFieldSerializer;
 
@@ -66,18 +65,13 @@ namespace SolrNet.SchemaDSL.Impl
         }
 
         internal DSLRun(DSLRun<T> parentDslRun, ISolrQuery newQuery)
-            : this(parentDslRun)
-        {
+            : this(parentDslRun) {
             // combine new query if neccesary
-            if (this.QueryField != null || newQuery != null)
-            {
-                if (this.QueryField == null)
-                {
+            if (this.QueryField != null || newQuery != null) {
+                if (this.QueryField == null) {
                     this.QueryField = newQuery;
-                }
-                else if (newQuery != null)
-                {
-                    this.QueryField = new SolrMultipleCriteriaQuery(new List<ISolrQuery> { parentDslRun.QueryField, QueryField });
+                } else if (newQuery != null) {
+                    this.QueryField = new SolrMultipleCriteriaQuery(new List<ISolrQuery> {parentDslRun.QueryField, QueryField});
                 }
             }
         }
@@ -89,8 +83,7 @@ namespace SolrNet.SchemaDSL.Impl
         //}
 
         internal DSLRun(DSLRun<T> dslRun, ICollection<SortOrder> order)
-            : this(dslRun)
-        {
+            : this(dslRun) {
             this.Order = new List<SortOrder>(this.Order);
             this.Order.AddCollection(order);
         }
@@ -101,15 +94,19 @@ namespace SolrNet.SchemaDSL.Impl
             this.Facets.AddCollection(facets);
         }
 
+        internal DSLRun(DSLRun<T> dslRun, SpellCheckingParameters spellChecking)
+            : this(dslRun) {
+            this.SpellCheckingParameters = spellChecking;
+        }
+
+
         internal DSLRun(DSLRun<T> dslRun, HighlightingParameters highlight)
-            : this(dslRun)
-        {
+            : this(dslRun) {
             this.Highlight = highlight;
         }
 
         internal DSLRun(DSLRun<T> dslRun, ICollection<KeyValuePair<string, string>> extraParams)
-            : this(dslRun)
-        {
+            : this(dslRun) {
             this.ExtraParams = new Dictionary<string, string>(this.ExtraParams);
             this.ExtraParams.AddCollection(extraParams);
         }
@@ -122,23 +119,19 @@ namespace SolrNet.SchemaDSL.Impl
         //    this.highlight = highlight;
         //}
 
-        public ISolrQueryResults<T> Run()
-        {
+        public ISolrQueryResults<T> Run() {
             return RunInternal(null, null, null);
         }
 
-        public ISolrQueryResults<T> Run(int start, int rows)
-        {
+        public ISolrQueryResults<T> Run(int start, int rows) {
             return RunInternal(start, rows, null);
         }
 
 
-        internal ISolrQueryResults<T> RunInternal(int? start, int? rows, string handler)
-        {
+        internal ISolrQueryResults<T> RunInternal(int? start, int? rows, string handler) {
             var extraParams = new Dictionary<string, string>(this.ExtraParams);
 
-            if (handler != null)
-            {
+            if (handler != null) {
                 extraParams.Add("qt", handler);
             }
 
@@ -158,71 +151,63 @@ namespace SolrNet.SchemaDSL.Impl
                 solrQuery = SolrQuery.All;
             }
 
-            return solrQueryExecuter.Execute(solrQuery, new QueryOptions
-            {
+            return solrQueryExecuter.Execute(solrQuery, new QueryOptions {
                 OrderBy = Order,
-                Facet = new FacetParameters
-                {
+                Facet = new FacetParameters {
                     Queries = Facets,
                 },
                 Start = start,
                 Rows = rows,
                 Highlight = Highlight,
                 //MoreLikeThis = moreLikeThis, //TODO: mlt
-                FilterQueries = Filters.Values, //TODO: fq
+                FilterQueries = Filters.Values,
+                //TODO: fq
                 //BoostQueries = boosts, //TODO: bq
                 //Fields = fields, //TODO: fl
                 ExtraParams = extraParams,
                 //Stats = this.stats, //TODO: stats
+                SpellCheck = SpellCheckingParameters,
             });
         }
 
-        public IDSLRun<T> OrderBy<TField>(Expression<Func<T, TField>> fieldExpression)
-        {
-            var newOrder = new List<SortOrder> { new SortOrder(fieldExpression.GetSolrFieldName()) };
+        public IDSLRun<T> OrderBy<TField>(Expression<Func<T, TField>> fieldExpression) {
+            var newOrder = new List<SortOrder> {new SortOrder(fieldExpression.GetSolrFieldName())};
             return new DSLRun<T>(this, newOrder);
         }
 
-        public IDSLRun<T> OrderBy<TField>(Expression<Func<T, TField>> fieldExpression, Order o)
-        {
-            var newOrder = new List<SortOrder> { new SortOrder(fieldExpression.GetSolrFieldName(), o) };
+        public IDSLRun<T> OrderBy<TField>(Expression<Func<T, TField>> fieldExpression, Order o) {
+            var newOrder = new List<SortOrder> {new SortOrder(fieldExpression.GetSolrFieldName(), o)};
             return new DSLRun<T>(this, newOrder);
         }
 
-        public IDSLFacetFieldOptions<T> WithFacetField<TField>(Expression<Func<T, TField>> fieldExpression)
-        {
+        public IDSLFacetFieldOptions<T> WithFacetField<TField>(Expression<Func<T, TField>> fieldExpression) {
             var facetFieldQuery = new SolrFacetFieldQuery(fieldExpression.GetSolrFieldName());
-            var newFacets = new List<ISolrFacetQuery> { facetFieldQuery };
+            var newFacets = new List<ISolrFacetQuery> {facetFieldQuery};
             return new DSLFacetFieldOptions<T>(this, newFacets, facetFieldQuery);
         }
 
         public IDSLFacetFieldOptions<T> WithFacetField<TField>(string fieldName) {
             var facetFieldQuery = new SolrFacetFieldQuery(fieldName);
-            var newFacets = new List<ISolrFacetQuery> { facetFieldQuery };
+            var newFacets = new List<ISolrFacetQuery> {facetFieldQuery};
             return new DSLFacetFieldOptions<T>(this, newFacets, facetFieldQuery);
         }
 
-        public IDSLRun<T> WithFacetQuery(string q)
-        {
+        public IDSLRun<T> WithFacetQuery(string q) {
             return WithFacetQuery(new SolrQuery(q));
         }
 
-        public IDSLRun<T> WithFacetQuery(ISolrQuery q)
-        {
-            var newFacets = new List<ISolrFacetQuery>(Facets) { new SolrFacetQuery(q) };
+        public IDSLRun<T> WithFacetQuery(ISolrQuery q) {
+            var newFacets = new List<ISolrFacetQuery>(Facets) {new SolrFacetQuery(q)};
             return new DSLRun<T>(this, newFacets);
         }
 
         //TODO: implement DSL HighlightingParameters
-        public IDSLRun<T> WithHighlighting(HighlightingParameters parameters)
-        {
+        public IDSLRun<T> WithHighlighting(HighlightingParameters parameters) {
             return new DSLRun<T>(this, parameters);
         }
 
-        public IDSLRun<T> WithHighlightingFields<TField>(params Expression<Func<T, TField>>[] fieldExpression)
-        {
-            return WithHighlighting(new HighlightingParameters
-            {
+        public IDSLRun<T> WithHighlightingFields<TField>(params Expression<Func<T, TField>>[] fieldExpression) {
+            return WithHighlighting(new HighlightingParameters {
                 Fields = fieldExpression.Select(f => f.GetSolrFieldName()).ToList(),
             });
         }
@@ -233,7 +218,22 @@ namespace SolrNet.SchemaDSL.Impl
         }
 
         public IDSLRun<T> WithQueryType(string queryType) {
-            var dslRun = new DSLRun<T>(this, new Dictionary<string, string> { { "qt", queryType } });
+            var dslRun = new DSLRun<T>(this, new Dictionary<string, string> {{"qt", queryType}});
+            return dslRun;
+        }
+
+        public ISpellCheckOptions<T> WithSpellCheck(string query) {
+            var dslRun = new SpellCheckOptions<T>(this, query);
+            return dslRun;
+        }
+
+        public IDSLRun<T> AddExtraParams(IDictionary<string, string> extraParams) {
+            var dslRun = new DSLRun<T>(this);
+            if (extraParams == null || extraParams.Count < 1) {
+                return dslRun;
+            }
+
+            dslRun.ExtraParams.AddCollection(extraParams);
             return dslRun;
         }
 
@@ -252,20 +252,20 @@ namespace SolrNet.SchemaDSL.Impl
         //}
     }
 
-    static class Helpers {
+    internal static class Helpers {
         public static void AddCollection<T>(this ICollection<T> baseCollection, ICollection<T> newItems) {
-            if (baseCollection == null)
-            {
+            if (baseCollection == null) {
                 throw new ArgumentNullException("baseCollection", "Can't add emements on null collection.");
             }
             if (newItems == null || newItems.Count == 0) {
                 return;
             }
-           
+
             foreach (var newItem in newItems) {
                 baseCollection.Add(newItem);
             }
         }
     }
 }
+
 #pragma warning restore 1591

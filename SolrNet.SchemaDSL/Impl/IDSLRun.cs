@@ -16,6 +16,7 @@
 #endregion SchemaDSL license
 
 using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using SolrNet.Commands.Parameters;
 
@@ -38,5 +39,7 @@ namespace SolrNet.SchemaDSL.Impl
         IDSLRun<T> WithHighlightingFields<TField>(params Expression<Func<T, TField>>[] fieldExpression);
         IDSLRun<T> DefType(string defType);
         IDSLRun<T> WithQueryType(string queryType);
+        ISpellCheckOptions<T> WithSpellCheck(string query);
+        IDSLRun<T> AddExtraParams(IDictionary<string, string> extraParams);
     }
 }
