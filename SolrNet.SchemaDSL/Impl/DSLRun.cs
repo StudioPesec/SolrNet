@@ -17,7 +17,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Linq.Expressions;
 using SolrNet.Commands.Parameters;
@@ -37,7 +36,7 @@ namespace SolrNet.SchemaDSL.Impl {
         protected readonly HighlightingParameters Highlight;
         protected readonly ISolrQuery QueryField;
         //protected readonly string DefTypeField;
-        protected readonly IDictionary<string, string> ExtraParams = new Dictionary<string, string>();
+        protected readonly IList<KeyValuePair<string, string>> ExtraParams = new List<KeyValuePair<string, string>>();
 
         protected readonly Guid DslRunId = Guid.NewGuid();
         protected readonly Guid ParentDslRunId;
@@ -57,7 +56,7 @@ namespace SolrNet.SchemaDSL.Impl {
             this.Highlight = parentDslRun.Highlight;
             this.QueryField = parentDslRun.QueryField;
             //this.DefTypeField = parentDslRun.DefTypeField;
-            this.ExtraParams = new Dictionary<string, string>(parentDslRun.ExtraParams);
+            this.ExtraParams = new List<KeyValuePair<string, string>>(parentDslRun.ExtraParams);
             this.solrQueryExecuter = parentDslRun.solrQueryExecuter;
             this.SolrFieldSerializer = parentDslRun.SolrFieldSerializer;
 
@@ -107,7 +106,7 @@ namespace SolrNet.SchemaDSL.Impl {
 
         internal DSLRun(DSLRun<T> dslRun, ICollection<KeyValuePair<string, string>> extraParams)
             : this(dslRun) {
-            this.ExtraParams = new Dictionary<string, string>(this.ExtraParams);
+            this.ExtraParams = new List<KeyValuePair<string, string>>(ExtraParams);
             this.ExtraParams.AddCollection(extraParams);
         }
 
@@ -129,7 +128,7 @@ namespace SolrNet.SchemaDSL.Impl {
 
 
         internal ISolrQueryResults<T> RunInternal(int? start, int? rows, string handler) {
-            var extraParams = new Dictionary<string, string>(this.ExtraParams);
+            var extraParams = new List<KeyValuePair<string, string>>(this.ExtraParams);
 
             if (handler != null) {
                 extraParams.Add("qt", handler);
@@ -227,7 +226,7 @@ namespace SolrNet.SchemaDSL.Impl {
             return dslRun;
         }
 
-        public IDSLRun<T> AddExtraParams(IDictionary<string, string> extraParams) {
+        public IDSLRun<T> AddExtraParams(ICollection<KeyValuePair<string, string>> extraParams) {
             var dslRun = new DSLRun<T>(this);
             if (extraParams == null || extraParams.Count < 1) {
                 return dslRun;
@@ -264,6 +263,10 @@ namespace SolrNet.SchemaDSL.Impl {
             foreach (var newItem in newItems) {
                 baseCollection.Add(newItem);
             }
+        }
+
+        public static void Add<TKey, TValue>(this ICollection<KeyValuePair<TKey, TValue>> collection, TKey key, TValue value) {
+            collection.Add(new KeyValuePair<TKey, TValue>(key, value));
         }
     }
 }

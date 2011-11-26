@@ -40,6 +40,6 @@ namespace SolrNet.SchemaDSL.Impl
         IDSLRun<T> DefType(string defType);
         IDSLRun<T> WithQueryType(string queryType);
         ISpellCheckOptions<T> WithSpellCheck(string query);
-        IDSLRun<T> AddExtraParams(IDictionary<string, string> extraParams);
+        IDSLRun<T> AddExtraParams(ICollection<KeyValuePair<string, string>> extraParams);
     }
 }

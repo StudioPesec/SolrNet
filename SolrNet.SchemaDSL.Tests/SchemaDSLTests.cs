@@ -469,8 +469,12 @@ namespace SolrNet.SchemaDSL.Tests {
             var solrGetParameters = new KeyValuePairList {
                 {"q", "*:*"},
                 {"abc", "123"},
+                {"abc", "456"},
+                {"xyz", "0"},
                 {"rows", 10.ToString()},
                 {"start", 0.ToString()},
+                {"d", "v"},
+                {"d", "v"},
             };
             With.Mocks(mocks)
                 .Expecting(() => Expect
@@ -480,12 +484,17 @@ namespace SolrNet.SchemaDSL.Tests {
 
                 .Verify(() => Solr
                                   .Query()
-                                  .AddExtraParams(new Dictionary<string, string> {
+                                  .AddExtraParams(new KeyValuePairList {
                                       {"abc", "123"},
+                                      {"abc", "456"},
+                                      {"xyz", "0"},
+                                      {"d", "v"},
+                                      {"d", "v"},
                                   })
                                   .Run(0, 10)
                 );
         }
+
 
         [Test]
         public void SpellCheck()
