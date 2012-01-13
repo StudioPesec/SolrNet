@@ -36,6 +36,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Impl\IDSLMoreLikeThis.cs" />
     <Compile Include="Impl\DeleteBy.cs" />
     <Compile Include="Impl\IDeleteBy.cs" />
     <Compile Include="Impl\IInterval.cs" />

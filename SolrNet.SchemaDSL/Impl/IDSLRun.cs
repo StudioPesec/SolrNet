@@ -41,5 +41,6 @@ namespace SolrNet.SchemaDSL.Impl
         IDSLRun<T> WithQueryType(string queryType);
         ISpellCheckOptions<T> WithSpellCheck(string query);
         IDSLRun<T> AddExtraParams(ICollection<KeyValuePair<string, string>> extraParams);
+        IDSLMoreLikeThis<T> MoreLikeThis<TField>(params Expression<Func<T, TField>>[] fieldExpression);
     }
 }

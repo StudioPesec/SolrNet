@@ -40,6 +40,7 @@ namespace SolrNet.SchemaDSL.Impl {
 
         protected readonly Guid DslRunId = Guid.NewGuid();
         protected readonly Guid ParentDslRunId;
+        protected MoreLikeThisParameters MoreLikeThisParams { get; private set; }
 
         public DSLRun(ISolrQueryExecuter<T> solrQueryExecuter, ISolrFieldSerializer solrFieldSerializer) {
             this.SolrFieldSerializer = solrFieldSerializer;
@@ -110,6 +111,10 @@ namespace SolrNet.SchemaDSL.Impl {
             this.ExtraParams.AddCollection(extraParams);
         }
 
+        internal DSLRun(DSLRun<T> dslRun, MoreLikeThisParameters mltParams)
+            : this(dslRun) {
+            this.MoreLikeThisParams = mltParams;
+        }
 
         //internal DSLRun(ISolrQuery query, ICollection<SortOrder> order, ICollection<ISolrFacetQuery> facets, HighlightingParameters highlight)
         //    : this(query, order)
@@ -158,7 +163,7 @@ namespace SolrNet.SchemaDSL.Impl {
                 Start = start,
                 Rows = rows,
                 Highlight = Highlight,
-                //MoreLikeThis = moreLikeThis, //TODO: mlt
+                MoreLikeThis = MoreLikeThisParams,
                 FilterQueries = Filters.Values,
                 //TODO: fq
                 //BoostQueries = boosts, //TODO: bq
@@ -198,6 +203,11 @@ namespace SolrNet.SchemaDSL.Impl {
         public IDSLRun<T> WithFacetQuery(ISolrQuery q) {
             var newFacets = new List<ISolrFacetQuery>(Facets) {new SolrFacetQuery(q)};
             return new DSLRun<T>(this, newFacets);
+        }
+
+        public IDSLMoreLikeThis<T> MoreLikeThis<TField>(params Expression<Func<T, TField>>[] fieldExpression) {
+            var mlt = new MoreLikeThisParameters(fieldExpression.Select(f => f.GetSolrFieldName()));
+            return new DSLMoreLikeThisOptions<T>(this, mlt);
         }
 
         //TODO: implement DSL HighlightingParameters
