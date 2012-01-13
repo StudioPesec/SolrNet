@@ -62,6 +62,13 @@ namespace SolrNet.SchemaDSL.Utils
         private static string GetSolrFieldNameInternal(LambdaExpression lambdaExpression) {
             var memberExpressionValue = lambdaExpression.Body as MemberExpression;
 
+            if (memberExpressionValue == null && lambdaExpression.Body is UnaryExpression) {
+                var unaryExpression = (lambdaExpression.Body as UnaryExpression);
+                if (unaryExpression.NodeType == ExpressionType.Convert) {
+                    memberExpressionValue = unaryExpression.Operand as MemberExpression;
+                }
+            }
+
             if (memberExpressionValue != null) {
                 var solrAttributes = memberExpressionValue.Member.GetCustomAttributes(typeof (SolrFieldAttribute), true);
 
@@ -72,7 +79,7 @@ namespace SolrNet.SchemaDSL.Utils
                 SolrFieldAttribute solrAttribute = (SolrFieldAttribute) solrAttributes[0];
                 return string.IsNullOrEmpty(solrAttribute.FieldName) ? memberExpressionValue.Member.Name : solrAttribute.FieldName;
             }
-            throw new ArgumentException("Can't get member name.", "lambdaExpression");
+            throw new ArgumentException("Can't get member name. Please expression must be simple selector.", "lambdaExpression");
         }
 
         private static string[] GetSolrFieldNamesInternal(LambdaExpression lambdaExpression)
