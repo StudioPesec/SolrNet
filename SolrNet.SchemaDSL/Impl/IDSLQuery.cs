@@ -65,12 +65,5 @@ namespace SolrNet.SchemaDSL.Impl
         /// <param name="query"></param>
         /// <returns></returns>
         IDSLQuery<TSchema> Query(string query);
-
-        /// <summary>
-        /// Appends any SolrNet query
-        /// </summary>
-        /// <param name="solrQueries"></param>
-        /// <returns></returns>
-        IDSLQuery<TSchema> AppednQuery(params ISolrQuery[] solrQueries);
     }
 }

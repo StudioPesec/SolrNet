@@ -66,9 +66,5 @@ namespace SolrNet.SchemaDSL.Impl {
         public IDSLQuery<T> Query(string searchString) {
             return new DSLQuery<T>(this, searchString);
         }
-
-        public IDSLQuery<T> AppednQuery(params ISolrQuery[] solrQueries) {
-            return new DSLQuery<T>(this, solrQueries);
-        }
     }
 }

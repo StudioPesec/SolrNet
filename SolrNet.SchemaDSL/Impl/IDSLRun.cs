@@ -31,6 +31,7 @@ namespace SolrNet.SchemaDSL.Impl
         ISolrQueryResults<T> Run(int start, int rows);
         IDSLRun<T> OrderBy<TField>(Expression<Func<T, TField>> fieldExpression);
         IDSLRun<T> OrderBy<TField>(Expression<Func<T, TField>> fieldExpression, Order o);
+        IDSLRun<T> OrderBy(SortOrder sortOrder);
         IDSLFacetFieldOptions<T> WithFacetField<TField>(Expression<Func<T, TField>> fieldExpression);
         IDSLFacetFieldOptions<T> WithFacetField<TField>(string fieldName);
         IDSLRun<T> WithFacetQuery(string query);
@@ -42,5 +43,12 @@ namespace SolrNet.SchemaDSL.Impl
         ISpellCheckOptions<T> WithSpellCheck(string query);
         IDSLRun<T> AddExtraParams(ICollection<KeyValuePair<string, string>> extraParams);
         IDSLMoreLikeThis<T> MoreLikeThis<TField>(params Expression<Func<T, TField>>[] fieldExpression);
+        
+        /// <summary>
+        /// Appends any SolrNet query
+        /// </summary>
+        /// <param name="solrQueries"></param>
+        /// <returns></returns>
+        IDSLQuery<T> AppendQuery(params ISolrQuery[] solrQueries);
     }
 }

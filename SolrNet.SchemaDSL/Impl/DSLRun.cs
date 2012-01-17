@@ -116,6 +116,11 @@ namespace SolrNet.SchemaDSL.Impl {
             this.MoreLikeThisParams = mltParams;
         }
 
+        public IDSLQuery<T> AppendQuery(params ISolrQuery[] solrQueries)
+        {
+            return new DSLQuery<T>(this, solrQueries);
+        }
+
         //internal DSLRun(ISolrQuery query, ICollection<SortOrder> order, ICollection<ISolrFacetQuery> facets, HighlightingParameters highlight)
         //    : this(query, order)
         //{
@@ -181,6 +186,10 @@ namespace SolrNet.SchemaDSL.Impl {
 
         public IDSLRun<T> OrderBy<TField>(Expression<Func<T, TField>> fieldExpression, Order o) {
             var newOrder = new List<SortOrder> {new SortOrder(fieldExpression.GetSolrFieldName(), o)};
+            return new DSLRun<T>(this, newOrder);
+        }
+        public IDSLRun<T> OrderBy(SortOrder sortOrder) {
+            var newOrder = new List<SortOrder> {sortOrder};
             return new DSLRun<T>(this, newOrder);
         }
 
