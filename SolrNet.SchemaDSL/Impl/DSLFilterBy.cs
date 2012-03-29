@@ -18,142 +18,142 @@
 using System.Collections.Generic;
 using SolrNet.Impl;
 
-namespace SolrNet.SchemaDSL.Impl
-{
-    class DSLFilterBy<T, FT> : IDSLFilterBy<T, FT> where T : ISchema
-    {
+namespace SolrNet.SchemaDSL.Impl {
+    internal class DSLFilterBy<T, FT> : IDSLFilterBy<T, FT> where T : ISchema {
         private bool negate = false;
         private readonly string fieldName;
         private readonly DSLRun<T> parentDslRun;
-        //private readonly string tag;
-        //private readonly DSLRun<T> parent;
+        private string tag;
 
 
-        internal DSLFilterBy(DSLRun<T> parentDslRun, string fieldName)
-        {
+        internal DSLFilterBy(DSLRun<T> parentDslRun, string fieldName) {
             this.fieldName = fieldName;
             this.parentDslRun = parentDslRun;
         }
 
-        //public DSLFilterBy(DSLRun<T> parent, string fieldName, string tag)
-        //{
-        //    this.fieldName = fieldName;
-        //    this.parent = parent;
-        //    this.tag = tag;
-        //}
-
-        public IDSLQuery<T> Is(FT value)
-        {
+        public IDSLQuery<T> Is(FT value) {
             IList<ISolrQuery> filters = new List<ISolrQuery>();
 
             var serializer = parentDslRun.SolrFieldSerializer;
 
             var nodes = serializer.Serialize(value);
 
-            foreach (var node in nodes)
-            {
-                filters.Add(new SolrQueryByField(fieldName, node.FieldValue));
+            foreach (var node in nodes) {
+                var queryByField = new SolrQueryByField(fieldName, node.FieldValue);
+                filters.Add(queryByField);
             }
 
             ISolrQuery newQuery;
-            if (filters.Count == 1)
-            {
+            if (filters.Count == 1) {
                 newQuery = filters[0];
-            }
-            else {
+            } else {
                 newQuery = new SolrMultipleCriteriaQuery(filters); //.Tag(tag);;
             }
 
-            if (this.negate)
-            {
+            if (this.negate) {
                 newQuery = new SolrNotQuery(newQuery);
             }
+
+            newQuery = TagQuery(newQuery);
 
             return new DSLQuery<T>(parentDslRun, newQuery);
         }
 
-        public IDSLQuery<T> HasValue()
-        {
+        private ISolrQuery TagQuery(ISolrQuery query) {
+            if (!string.IsNullOrEmpty(tag)) {
+                var localParams = new LocalParams {{"tag", tag}};
+                query = localParams + query;
+            }
+            return query;
+        }
+
+        public IDSLQuery<T> HasValue() {
             ICollection<ISolrQuery> filters = new List<ISolrQuery>();
 
             filters.Add(new SolrQueryByField(fieldName, "*"));
 
-            ISolrQuery newQuery = new SolrMultipleCriteriaQuery(filters);//.Tag(tag);
+            ISolrQuery newQuery = new SolrMultipleCriteriaQuery(filters); //.Tag(tag);
 
-            if (this.negate)
-            {
+            if (this.negate) {
                 newQuery = new SolrNotQuery(newQuery);
             }
+
+            newQuery = TagQuery(newQuery);
 
             return new DSLQuery<T>(parentDslRun, newQuery);
         }
 
-        public IDSLQuery<T> Between(Interval<FT> range)
-        {
-            var filter = new SolrQueryByRange<FT>(fieldName, range.Min.Value, range.Max.Value, range.Min.Type == IntervalBorderType.Inclusive, range.Max.Type == IntervalBorderType.Inclusive);
+        public IDSLQuery<T> Between(Interval<FT> range) {
+            ISolrQuery newQuery = new SolrQueryByRange<FT>(fieldName, range.Min.Value, range.Max.Value, range.Min.Type == IntervalBorderType.Inclusive, range.Max.Type == IntervalBorderType.Inclusive);
 
-            return new DSLQuery<T>(parentDslRun, filter);
+            newQuery = TagQuery(newQuery);
+
+            return new DSLQuery<T>(parentDslRun, newQuery);
         }
 
-        public IDSLQuery<T> Between(FT min, FT max, bool minInclusive, bool maxInclusive)
-        {
-            var filter = new SolrQueryByRange<FT>(fieldName, min, max, minInclusive, maxInclusive);
-            return new DSLQuery<T>(parentDslRun, filter);
+        public IDSLQuery<T> Between(FT min, FT max, bool minInclusive, bool maxInclusive) {
+            ISolrQuery newQuery = new SolrQueryByRange<FT>(fieldName, min, max, minInclusive, maxInclusive);
+
+            newQuery = TagQuery(newQuery);
+
+            return new DSLQuery<T>(parentDslRun, newQuery);
         }
 
-        public IDSLQuery<T> BetweenEx(Interval<FT> range)
-        {
-            var filter = new SolrQueryByRange<FT>(fieldName, range.Min.Value, range.Max.Value, range.Min.Type == IntervalBorderType.Inclusive, range.Max.Type == IntervalBorderType.Inclusive);
-            return new DSLQuery<T>(parentDslRun, filter);
+        public IDSLQuery<T> BetweenEx(Interval<FT> range) {
+            ISolrQuery newQuery = new SolrQueryByRange<FT>(fieldName, range.Min.Value, range.Max.Value, range.Min.Type == IntervalBorderType.Inclusive, range.Max.Type == IntervalBorderType.Inclusive);
+
+            newQuery = TagQuery(newQuery);
+
+            return new DSLQuery<T>(parentDslRun, newQuery);
         }
 
-        public IDSLQuery<T> BetweenEx(FT min, FT max, bool minInclusive, bool maxInclusive)
-        {
-            var filter = new SolrQueryByRange<FT>(fieldName, min, max, minInclusive, maxInclusive);
-            return new DSLQuery<T>(parentDslRun, filter);
+        public IDSLQuery<T> BetweenEx(FT min, FT max, bool minInclusive, bool maxInclusive) {
+            ISolrQuery newQuery = new SolrQueryByRange<FT>(fieldName, min, max, minInclusive, maxInclusive);
+
+            newQuery = TagQuery(newQuery);
+
+            return new DSLQuery<T>(parentDslRun, newQuery);
         }
 
-        public IDSLQuery<T> In(IEnumerable<FT> values)
-        {
+        public IDSLQuery<T> In(IEnumerable<FT> values) {
             return inInternal(values);
         }
 
-        public IDSLQuery<T> In<ST>(IEnumerable<ST> values) where ST : struct
-        {
+        public IDSLQuery<T> In<ST>(IEnumerable<ST> values) where ST : struct {
             return this.inInternal(values);
         }
 
-
-
-        private IDSLQuery<T> inInternal(System.Collections.IEnumerable values)
-        {
+        private IDSLQuery<T> inInternal(System.Collections.IEnumerable values) {
             ICollection<ISolrQuery> filters = new List<ISolrQuery>();
 
             var serializer = parentDslRun.SolrFieldSerializer;
 
-            foreach (var value in values)
-            {
+            foreach (var value in values) {
                 var nodes = serializer.Serialize(value);
 
-                foreach (var node in nodes)
-                {
+                foreach (var node in nodes) {
                     filters.Add(new SolrQueryByField(fieldName, node.FieldValue));
                 }
             }
 
             ISolrQuery newQuery = new SolrMultipleCriteriaQuery(filters, SolrMultipleCriteriaQuery.Operator.OR); //.Tag(tag);
 
-            if (this.negate)
-            {
+            if (this.negate) {
                 newQuery = new SolrNotQuery(newQuery);
             }
+
+            newQuery = TagQuery(newQuery);
 
             return new DSLQuery<T>(parentDslRun, newQuery);
         }
 
-        public IDSLFilterBy<T, FT> Negate()
-        {
+        public IDSLFilterBy<T, FT> Negate() {
             this.negate = true;
+            return this;
+        }
+
+        public IDSLFilterBy<T, FT> Tag(string tagName) {
+            this.tag = tagName;
             return this;
         }
     }

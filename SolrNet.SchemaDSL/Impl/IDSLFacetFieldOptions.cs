@@ -56,5 +56,13 @@ namespace SolrNet.SchemaDSL.Impl
         /// Default is false
         /// </summary>
         IDSLFacetFieldOptions<T> IncludeMissing();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tagName"></param>
+        /// <returns></returns>
+        IDSLFacetFieldOptions<T> ExcludeTag(string tagName);
+
     }
 }

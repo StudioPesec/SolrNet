@@ -31,7 +31,9 @@ namespace SolrNet.SchemaDSL.Impl {
 
         protected readonly IDictionary<Guid, ISolrQuery> Filters = new Dictionary<Guid, ISolrQuery>();
         protected readonly ICollection<SortOrder> Order = new List<SortOrder>();
-        protected readonly ICollection<ISolrFacetQuery> Facets = new List<ISolrFacetQuery>();
+        //protected readonly ICollection<ISolrFacetQuery> Facets = new List<ISolrFacetQuery>();
+        protected readonly ICollection<DSLFacetFieldOptions<T>> Facets = new List<DSLFacetFieldOptions<T>>();
+        protected readonly ICollection<ISolrFacetQuery> SimpleFacetQueries = new List<ISolrFacetQuery>();
         protected readonly SpellCheckingParameters SpellCheckingParameters;
         protected readonly HighlightingParameters Highlight;
         protected readonly ISolrQuery QueryField;
@@ -53,6 +55,7 @@ namespace SolrNet.SchemaDSL.Impl {
             this.Filters = parentDslRun.Filters;
             this.Order = parentDslRun.Order;
             this.Facets = parentDslRun.Facets;
+            this.SimpleFacetQueries = parentDslRun.SimpleFacetQueries;
             this.SpellCheckingParameters = parentDslRun.SpellCheckingParameters;
             this.Highlight = parentDslRun.Highlight;
             this.QueryField = parentDslRun.QueryField;
@@ -88,9 +91,16 @@ namespace SolrNet.SchemaDSL.Impl {
             this.Order.AddCollection(order);
         }
 
-        internal DSLRun(DSLRun<T> dslRun, ICollection<ISolrFacetQuery> facets)
-            : this(dslRun) {
-            this.Facets = new List<ISolrFacetQuery>(this.Facets);
+        //internal DSLRun(DSLRun<T> dslRun, ICollection<ISolrFacetQuery> facets)
+        //    : this(dslRun) {
+        //    this.Facets = new List<ISolrFacetQuery>(this.Facets);
+        //    this.Facets.AddCollection(facets);
+        //}
+
+        internal DSLRun(DSLRun<T> dslRun, ICollection<DSLFacetFieldOptions<T>> facets)
+            : this(dslRun)
+        {
+            this.Facets = new List<DSLFacetFieldOptions<T>>(this.Facets);
             this.Facets.AddCollection(facets);
         }
 
@@ -163,7 +173,9 @@ namespace SolrNet.SchemaDSL.Impl {
             return solrQueryExecuter.Execute(solrQuery, new QueryOptions {
                 OrderBy = Order,
                 Facet = new FacetParameters {
-                    Queries = Facets,
+                    Queries = Facets.Select(f=>f.FacetQuery)
+                    .Concat(SimpleFacetQueries)
+                    .ToArray(),
                 },
                 Start = start,
                 Rows = rows,
@@ -195,14 +207,17 @@ namespace SolrNet.SchemaDSL.Impl {
 
         public IDSLFacetFieldOptions<T> WithFacetField<TField>(Expression<Func<T, TField>> fieldExpression) {
             var facetFieldQuery = new SolrFacetFieldQuery(fieldExpression.GetSolrFieldName());
-            var newFacets = new List<ISolrFacetQuery> {facetFieldQuery};
-            return new DSLFacetFieldOptions<T>(this, newFacets, facetFieldQuery);
+            
+            var result = new DSLFacetFieldOptions<T>(this, facetFieldQuery);
+            result.Facets.Add(result);
+            return result;
         }
 
         public IDSLFacetFieldOptions<T> WithFacetField<TField>(string fieldName) {
             var facetFieldQuery = new SolrFacetFieldQuery(fieldName);
-            var newFacets = new List<ISolrFacetQuery> {facetFieldQuery};
-            return new DSLFacetFieldOptions<T>(this, newFacets, facetFieldQuery);
+            var result = new DSLFacetFieldOptions<T>(this, facetFieldQuery);
+            result.Facets.Add(result);
+            return result;
         }
 
         public IDSLRun<T> WithFacetQuery(string q) {
@@ -210,8 +225,11 @@ namespace SolrNet.SchemaDSL.Impl {
         }
 
         public IDSLRun<T> WithFacetQuery(ISolrQuery q) {
-            var newFacets = new List<ISolrFacetQuery>(Facets) {new SolrFacetQuery(q)};
-            return new DSLRun<T>(this, newFacets);
+            var newFacetQuery = new SolrFacetQuery(q);
+
+            var result = new DSLRun<T>(this);
+            result.SimpleFacetQueries.Add(newFacetQuery);
+            return result;
         }
 
         public IDSLMoreLikeThis<T> MoreLikeThis<TField>(params Expression<Func<T, TField>>[] fieldExpression) {

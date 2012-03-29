@@ -438,6 +438,69 @@ namespace SolrNet.SchemaDSL.Tests {
         }
 
         [Test]
+        public void FacetFieldWithTag()
+        {
+            mocks.BackToRecordAll();
+            var solrGetParameters = new KeyValuePairList {
+                {"facet", "true"},
+                {"facet.field", "{!ex=tMake}ModelDesc"},
+                {"fq", "{!tag=tMake}(MakeDesc:bmw)"},
+                {"q", "*:*"},
+                {"rows", 10.ToString()},
+                {"start", 0.ToString()},
+            };
+
+            //System.Diagnostics.Debugger.Launch();
+
+            With.Mocks(mocks)
+                .Expecting(() => Expect
+                                     .Call(conn.Get("/select", solrGetParameters)).IgnoreArguments()
+                                     .Callback(new SolrGetTester("/select", solrGetParameters).ValidateSolrGet)
+                                     .Return(EmptySolrResponse))
+
+                .Verify(() => Solr
+                                  .Query()
+                                  .FilterBy(f => f.MakeDesc).Tag("tMake").Is("bmw")
+                                  .WithFacetField(f => f.ModelDesc).ExcludeTag("tMake")
+                                  .Run(0, 10)
+                );
+        }
+
+        [Test]
+        public void FacetFieldWithTag2() {
+            mocks.BackToRecordAll();
+            var solrGetParameters = new KeyValuePairList {
+                {"facet", "true"},
+                {"facet.field", "{!ex=tMake}ModelDesc"},
+                {"facet.field", "{!ex=tCat}Category"},
+                {"facet.query","test:[* TO *]"},
+                {"fq", "{!tag=tMake}(MakeDesc:bmw)"},
+                {"fq", "{!tag=tCat}(Category:car)"},
+                {"q", "*:*"},
+                {"rows", 10.ToString()},
+                {"start", 0.ToString()},
+            };
+
+            //System.Diagnostics.Debugger.Launch();
+
+            With.Mocks(mocks)
+                .Expecting(() => Expect
+                                     .Call(conn.Get("/select", solrGetParameters)).IgnoreArguments()
+                                     .Callback(new SolrGetTester("/select", solrGetParameters).ValidateSolrGet)
+                                     .Return(EmptySolrResponse))
+
+                .Verify(() => Solr
+                                  .Query()
+                                  .FilterBy(f => f.MakeDesc).Tag("tMake").Is("bmw")
+                                  .FilterBy(f => f.Category).Tag("tCat").Is("car")
+                                  .WithFacetField(f => f.ModelDesc).ExcludeTag("tMake")
+                                  .WithFacetField(f => f.Category).ExcludeTag("tCat")
+                                  .WithFacetQuery(new SolrHasValueQuery("test"))
+                                  .Run(0, 10)
+                );
+        }
+
+        [Test]
         public void HighlightingFields() {
             mocks.BackToRecordAll();
             var solrGetParameters = new KeyValuePairList {

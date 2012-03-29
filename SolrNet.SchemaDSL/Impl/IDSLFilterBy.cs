@@ -32,6 +32,8 @@ namespace SolrNet.SchemaDSL.Impl
         IDSLQuery<TSchema> BetweenEx(TField start, TField end, bool minInclusive, bool maxInclusive);
         IDSLQuery<TSchema> HasValue();
         IDSLFilterBy<TSchema, TField> Negate();
+
+        IDSLFilterBy<TSchema, TField> Tag(string tagName);
     }
 }
 #pragma warning restore 1591
